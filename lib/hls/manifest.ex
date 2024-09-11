@@ -19,7 +19,8 @@ defmodule HLS.Manifest do
     :discontinuity_sequence,
     :end_list,
     :i_frames_only,
-    :images_only
+    :images_only,
+    :x_key
   ]
 
   # These tags are only found in master manifests. The existence
@@ -46,6 +47,7 @@ defmodule HLS.Manifest do
     |> put_image_renditions()
     |> put_i_frame_renditions()
     |> put_segments()
+    |> put_x_key()
   end
 
   # Loops over the lines and chunks the related lines together into a list. Each
@@ -120,6 +122,17 @@ defmodule HLS.Manifest do
   end
 
   defp put_segments(manifest), do: manifest
+
+  defp put_x_key(%{type: type, lines: lines} = manifest) when type not in [:master] do
+    x_key =
+      lines
+      |> Enum.find(fn line -> line.tag_name == "EXT-X-KEY" end)
+      |> HLS.XKey.build()
+
+    %{manifest | x_key: x_key}
+  end
+
+  defp put_x_key(manifest), do: manifest
 
   # If the manifest contains a master-only tag, it is a master.
   # Otherwise, it must be vod or live.

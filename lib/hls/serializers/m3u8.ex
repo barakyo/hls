@@ -14,6 +14,7 @@ defmodule HLS.Serializers.M3U8 do
     |> maybe_insert_independent_segments(manifest)
     |> maybe_insert_target_duration(manifest)
     |> maybe_insert_playlist_type(manifest)
+    |> maybe_insert_x_key(manifest)
     |> maybe_insert_i_frames_only(manifest)
   end
 
@@ -62,6 +63,12 @@ defmodule HLS.Serializers.M3U8 do
   end
 
   defp maybe_insert_playlist_type(content, _), do: content
+
+  defp maybe_insert_x_key(content, %HLS.Manifest{x_key: nil}), do: content
+
+  defp maybe_insert_x_key(content, %HLS.Manifest{x_key: x_key}) do
+    content <> "\n#EXT-X-KEY:METHOD=#{x_key.method},URI=#{x_key.uri},IV=#{x_key.iv}"
+  end
 
   defp maybe_insert_i_frames_only(content, %HLS.Manifest{i_frames_only: true}) do
     content <> "\n#EXT-X-I-FRAMES-ONLY"
